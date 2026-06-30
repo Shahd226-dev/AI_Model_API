@@ -3,94 +3,98 @@ from pydantic import BaseModel
 import pandas as pd
 import joblib
 
-# ==========================
-# Create FastAPI application
-# ==========================
+# ==========================================================
+# Create FastAPI Application
+# ==========================================================
 
 app = FastAPI(
-    title="Attack Detection API",
-    description="API for detecting normal vs attack Wi-Fi traffic",
-    version="1.0.0"
+    title="Wi-Fi Attack Detection API",
+    description="Random Forest API for Wi-Fi Attack Detection",
+    version="2.0.0"
 )
 
-# ==========================
-# Load trained model
-# ==========================
+# ==========================================================
+# Load Trained Model
+# ==========================================================
 
-artifact = joblib.load("attack_detection_model.pkl")
+MODEL_PATH = "Models/random_forest_optimized.pkl"
 
-model = artifact["model"]
-scaler = artifact["scaler"]
-feature_columns = artifact["feature_columns"]
-numeric_columns = artifact["numeric_columns"]
+try:
+    model = joblib.load(MODEL_PATH)
+    print("===================================")
+    print("Random Forest model loaded.")
+    print("API Ready.")
+    print("===================================")
+except Exception as e:
+    raise RuntimeError(f"Failed to load model: {e}")
 
-# ==========================
+# ==========================================================
 # Request Model
-# ==========================
+# ==========================================================
 
 class PredictionRequest(BaseModel):
-    wlan_bssid: int
-    wlan_sa: int
     wlan_radio_channel: float
     radiotap_dbm_antsignal: float
     wlan_fc_protected: float
-    frame_len: float
-    wlan_fc_retry: float
-    wlan_duration: float
-    wlan_seq: float
     connected_clients: float
 
-# ==========================
+# ==========================================================
 # Home Endpoint
-# ==========================
+# ==========================================================
 
 @app.get("/")
 def home():
     return {
-        "message": "Attack Detection API Running!"
+        "message": "Wi-Fi Attack Detection API is Running",
+        "model": "Random Forest",
+        "version": "2.0.0"
     }
 
-# ==========================
-# Health Check
-# ==========================
+# ==========================================================
+# Health Endpoint
+# ==========================================================
 
 @app.get("/health")
 def health():
     return {
-        "status": "healthy"
+        "status": "healthy",
+        "model_loaded": True
     }
 
-# ==========================
+# ==========================================================
 # Prediction Endpoint
-# ==========================
+# ==========================================================
 
 @app.post("/predict")
 def predict(request: PredictionRequest):
+
     try:
-        # Convert request to DataFrame
-        data = pd.DataFrame([request.model_dump()])
 
-        # Ensure feature order matches training
-        data = data[feature_columns]
+        # Create DataFrame with EXACT feature names used during training
+        data = pd.DataFrame([{
+            "wlan_radio.channel": request.wlan_radio_channel,
+            "radiotap.dbm_antsignal": request.radiotap_dbm_antsignal,
+            "wlan.fc.protected": request.wlan_fc_protected,
+            "Connected_Clients": request.connected_clients
+        }])
 
-        # Scale only numeric columns
-        data_scaled = data.copy()
-        data_scaled[numeric_columns] = scaler.transform(
-            data_scaled[numeric_columns]
-        )
+        # Prediction
+        prediction = model.predict(data)[0]
 
-        # Predict
-        prediction = model.predict(data_scaled)
-        probability = model.predict_proba(data_scaled)
+        # Prediction Probabilities
+        probabilities = model.predict_proba(data)[0]
 
-        return {
-            "prediction": int(prediction[0]),
-            "prediction_name": "attack" if prediction[0] == 1 else "normal",
-            "attack_probability": round(float(probability[0][1]), 4),
-            "normal_probability": round(float(probability[0][0]), 4)
+        response = {
+            "prediction": int(prediction),
+            "prediction_name": "Attack" if prediction == 0 else "Normal",
+            "attack_probability": round(float(probabilities[0]), 4),
+            "normal_probability": round(float(probabilities[1]), 4)
         }
 
+        return response
+
     except Exception as e:
+
         raise HTTPException(
             status_code=500,
             detail=str(e)

@@ -1,6 +1,10 @@
 # Attack Detection API
 
-A FastAPI-based REST API that serves a trained Random Forest machine learning model for Wi-Fi attack detection. The API receives network traffic features and predicts whether the traffic is **Normal** or an **Attack**.
+A FastAPI-based REST API that serves a trained Random Forest machine learning model for Wi-Fi attack detection.
+
+## Overview
+
+This API receives Wi-Fi network features, receives four Wi-Fi features and predicts whether the traffic is Normal or Attack using a trained Random Forest model, and predicts whether the traffic is **Normal** or an **Attack**.
 
 ## Features
 
@@ -17,11 +21,14 @@ A FastAPI-based REST API that serves a trained Random Forest machine learning mo
 
 ```
 AI_Model_API/
-│── app.py
-│── attack_detection_model.pkl
-│── requirements.txt
-│── runtime.txt
-│── README.md
+│
+├── Models/
+│      random_forest_optimized.pkl
+│
+├── app.py
+├── requirements.txt
+├── runtime.txt
+├── README.md
 └── .gitignore
 ```
 
@@ -80,22 +87,23 @@ Swagger UI:
 http://127.0.0.1:8000/docs
 ```
 
----
+## API Endpoints
+
+| Method | Endpoint   | Description           |
+| ------ | ---------- | --------------------- |
+| GET    | `/`        | API information       |
+| GET    | `/health`  | Health check          |
+| POST   | `/predict` | Predict Attack/Normal |
+
 
 ## Example Request
 
 ```json
 {
-  "wlan_bssid": 652,
-  "wlan_sa": 758,
-  "wlan_radio_channel": 0.461729,
-  "radiotap_dbm_antsignal": -0.592966,
-  "wlan_fc_protected": 0.240472,
-  "frame_len": -0.901852,
-  "wlan_fc_retry": -0.462,
-  "wlan_duration": 0.35,
-  "wlan_seq": 0.12,
-  "connected_clients": 3
+  "wlan_radio_channel": 36,
+  "radiotap_dbm_antsignal": -45,
+  "wlan_fc_protected": 1,
+  "connected_clients": 12
 }
 ```
 
@@ -105,40 +113,12 @@ http://127.0.0.1:8000/docs
 
 ```json
 {
-  "prediction": 1
+  "prediction": 1,
+  "prediction_name": "Normal",
+  "attack_probability": 0.0000,
+  "normal_probability": 1.0000
 }
 ```
-
-Where:
-
-- `0` = Normal Traffic
-- `1` = Attack Detected
-
----
-
-## Deployment
-
-The API is deployed on **Render** and can be accessed through the generated Render URL.
-
----
-
-## Raspberry Pi Integration
-
-The Raspberry Pi sends network traffic features to the API using an HTTP POST request.
-
-Example:
-
-```python
-import requests
-
-url = "https://your-render-url.onrender.com/predict"
-
-response = requests.post(url, json=payload)
-
-print(response.json())
-```
-
----
 
 ## Technologies Used
 
