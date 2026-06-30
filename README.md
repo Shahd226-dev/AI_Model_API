@@ -1,18 +1,17 @@
 # Attack Detection API
 
-A FastAPI-based REST API that serves a trained Random Forest machine learning model for Wi-Fi attack detection.
-
-## Overview
-
-This API receives Wi-Fi network features, preprocesses the input, and predicts whether the traffic is **Normal** or an **Attack**.
+A FastAPI-based REST API that serves a trained Random Forest machine learning model for Wi-Fi attack detection. The API receives network traffic features and predicts whether the traffic is **Normal** or an **Attack**.
 
 ## Features
 
-- FastAPI REST API
-- Random Forest prediction model
-- Probability scores for predictions
+- FastAPI backend
+- Random Forest model (`attack_detection_model.pkl`)
+- REST API for predictions
 - Interactive Swagger documentation
-- Ready for deployment on Render
+- Ready for Raspberry Pi integration
+- Deployed on Render
+
+---
 
 ## Project Structure
 
@@ -26,61 +25,62 @@ AI_Model_API/
 └── .gitignore
 ```
 
+---
+
 ## Installation
 
-### Clone the repository
+Clone the repository:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Shahd226-dev/AI_Model_API.git
 cd AI_Model_API
 ```
 
-### Create a virtual environment
+Create and activate a virtual environment (recommended):
 
-**Windows**
+### Windows
 
 ```bash
 python -m venv venv
 venv\Scripts\activate
 ```
 
-**Linux**
+### Linux / macOS
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Install dependencies
+Install the required packages:
 
 ```bash
 pip install -r requirements.txt
 ```
 
+---
+
 ## Run the API
+
+Start the FastAPI server:
 
 ```bash
 uvicorn app:app --reload
 ```
 
-The API will run at:
+The API will be available at:
 
 ```
 http://127.0.0.1:8000
 ```
 
-Swagger documentation:
+Swagger UI:
 
 ```
 http://127.0.0.1:8000/docs
 ```
 
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Check if the API is running |
-| POST | `/predict` | Predict whether traffic is normal or an attack |
+---
 
 ## Example Request
 
@@ -99,30 +99,59 @@ http://127.0.0.1:8000/docs
 }
 ```
 
+---
+
 ## Example Response
 
 ```json
 {
-  "prediction": 1,
-  "prediction_name": "attack",
-  "attack_probability": 0.84
+  "prediction": 1
 }
 ```
+
+Where:
+
+- `0` = Normal Traffic
+- `1` = Attack Detected
+
+---
+
+## Deployment
+
+The API is deployed on **Render** and can be accessed through the generated Render URL.
+
+---
+
+## Raspberry Pi Integration
+
+The Raspberry Pi sends network traffic features to the API using an HTTP POST request.
+
+Example:
+
+```python
+import requests
+
+url = "https://your-render-url.onrender.com/predict"
+
+response = requests.post(url, json=payload)
+
+print(response.json())
+```
+
+---
 
 ## Technologies Used
 
 - Python
 - FastAPI
 - Scikit-learn
-- Pandas
-- NumPy
-- Joblib
 - Uvicorn
+- Joblib
+- Render
+- Git & GitHub
 
-## Deployment
+---
 
-This API can be deployed locally, exposed using ngrok for testing, or hosted permanently using Render.
+## Author
 
-## Authors
-
-- Shahd Mostafa
+**Shahd Mostafa**
